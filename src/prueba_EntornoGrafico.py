@@ -336,13 +336,25 @@ def updateThumb(image):
 def loadThumbs():
     global thumb_strip
     thumb_size = (int(thumb_photo_width * GRID_W_PX), int(thumb_photo_height * GRID_H_PX))
-    for i in range (0,8):
-        try:
-            thumb_strip.append(pygame.image.load(thumb_loc+str(i+1)+'.jpg').convert())
-            thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
-        except:
-            thumb_strip.append(pygame.Surface(thumb_size))
-            thumb_strip[i].fill(blank_thumb)
+
+    
+    for dirName, subdirList, fileList in os.walk(rawPath):
+        for fname in fileList:
+            #print('\t%s' % fname)
+            try:
+                thumb_strip.append(pygame.image.load(rawPath + fname).convert())
+                thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
+            except:
+                thumb_strip.append(pygame.Surface(thumb_size))
+                thumb_strip[i].fill(blank_thumb)
+
+    #for i in range (0,8):
+        #try:
+           #thumb_strip.append(pygame.image.load(thumb_loc+str(i+1)+'.jpg').convert())
+            #thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
+        #except:
+            #thumb_strip.append(pygame.Surface(thumb_size))
+            #thumb_strip[i].fill(blank_thumb)
 
 def makeTextObjs(text, font, color):
     surf = font.render(text, True, color)
