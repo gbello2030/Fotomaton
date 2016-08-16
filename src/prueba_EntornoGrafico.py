@@ -229,7 +229,6 @@ def processPhoto(photos):
     logo = Image.open("/home/pi/fotomaton/imagenes/marcos/mask_V.png")
     montage.paste(logo,(print_size[0]-220-20,0))
     montage.save("/home/pi/fotomaton/imagenes/composiciones/" + str(time.time()) + ".jpg","JPEG",quality=100)
-##    shutil.copyfile("/usr/photobooth/print_image.jpg","/usr/photobooth/montages/" + str(time.time()) + ".jpg")
     
 
 def displayImage(image):
