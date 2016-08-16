@@ -53,6 +53,12 @@ basic_font_size    = 4
 big_font_size      = 8
 huge_font_size     = 50
 
+#Rutas basicas del fotomaton
+imgPath = '/home/pi/fotomaton/imagenes/'
+marcosPath = '/home/pi/fotomaton/imagenes/marcos/'
+composicionesPath = '/home/pi/fotomaton/imagenes/composiciones/'
+rawPath = '/home/pi/fotomaton/imagenes/raw/'
+
 thumb_size = (400,300)
 thumb_time = 2
 thumb_last_sw = 0
@@ -199,7 +205,10 @@ def photoShoot(numPhotos):
     pygame.display.update()
     CAMERA.stop_preview()
     showTextScreen('Fotomaton','Procesando...')
-    processPhoto(image)
+
+    #processPhoto(image)
+    procesarFotos(image)
+    
     #printPhoto('/usr/photobooth/print_image.jpg',image)
     CAMERA.resolution = preview_resolution
     CAMERA.preview_fullscreen = False
@@ -229,7 +238,28 @@ def processPhoto(photos):
     logo = Image.open("/home/pi/fotomaton/imagenes/marcos/mask_V.png")
     montage.paste(logo,(print_size[0]-220-20,0))
     montage.save("/home/pi/fotomaton/imagenes/composiciones/" + str(time.time()) + ".jpg","JPEG",quality=100)
-    
+
+def procesarFotos(fotos)
+    ancho_img = 581
+    alto_img = 584
+
+    marcoFoto = Image.open(marcosPath + 'pelicula_VERTICAL-GRANDE.jpg')
+    separador = Image.open( marcosPath + 'separador.jpg')
+    imageComposite_V = Image.new("RGBA", (marcoFoto.size[0], marcoFoto.size[1]), WHITE)
+    imageComposite_V.paste(marcoFoto, (0,0))
+
+    vertical_Px = 24
+    horizontal_PX = 125
+
+    for foto in fotos:
+        save_name = str(time.time())
+        foto.save(rawPath + save_name + '.jpg','JPEG',quality=100)
+        imageComposite_V.paste(foto.resize([ancho_img,alto_img]), (horizontal_PX,vertical_Px))
+        imageComposite_V.paste(separador, (horizontal_PX, vertical_Px + alto_img))
+        vertical_Px = vertical_Px + alto_img + separador.size[1]
+
+    imageComposite_V.save( composicionesPath + str(time.time()) + ".jpg","JPEG",quality=100)
+
 
 def displayImage(image):
     image = pygame.transform.scale(pygame.image.load(image),(WINDOWWIDTH,WINDOWHEIGHT))
