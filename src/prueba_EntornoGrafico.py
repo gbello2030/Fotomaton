@@ -239,7 +239,8 @@ def processPhoto(photos):
     montage.paste(logo,(print_size[0]-220-20,0))
     montage.save("/home/pi/fotomaton/imagenes/composiciones/" + str(time.time()) + ".jpg","JPEG",quality=100)
 
-def procesarFotos(fotos)
+
+def procesarFotos(fotos):
     ancho_img = 581
     alto_img = 584
 
