@@ -13,7 +13,6 @@ imgs    = [ Image.open(i) for i in list_im ]
 
 separador = Image.open( marcosPath + '/separador.jpg')
 separador = separador.resize([582,separador.size[1]])
-##separador.save( marcosPath + '/composicionVertical.jpg')
 
 marcaAgua_V = Image.open(marcosPath + '/pelicula_VERTICAL-GRANDE.jpg')
 
