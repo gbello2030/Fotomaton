@@ -242,7 +242,7 @@ def processPhoto(photos):
 
 def procesarFotos(fotos):
     ancho_img = 581
-    alto_img = 584
+    alto_img = 585
 
     marcoFoto = Image.open(marcosPath + 'pelicula_VERTICAL-GRANDE.jpg')
     separador = Image.open( marcosPath + 'separador.jpg')
