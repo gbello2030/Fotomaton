@@ -58,12 +58,12 @@ imgPath = '/home/pi/fotomaton/imagenes/'
 marcosPath = '/home/pi/fotomaton/imagenes/marcos/'
 composicionesPath = '/home/pi/fotomaton/imagenes/composiciones/'
 rawPath = '/home/pi/fotomaton/imagenes/raw/'
+thumb_loc = '/home/pi/fotomaton/imagenes/thumb/'
 
 thumb_size = (400,300)
 thumb_time = 2
 thumb_last_sw = 0
 thumb_index = 1
-thumb_loc = '/home/pi/fotomaton/imagenes/thumb/'
 thumb_strip = []
 
 preview_resolution = (1296,972)
@@ -302,7 +302,7 @@ def idleScreen():
 
 def filmStrip():
     global thumb_index, thumb_last_sw
-    if time.time() - thumb_time> thumb_last_sw:
+    if time.time() - thumb_time > thumb_last_sw:
         thumb_last_sw = time.time()
         strip = pygame.Surface((thumb_strip_width * GRID_W_PX, thumb_strip_height * GRID_H_PX),pygame.SRCALPHA)
         strip.fill(BLACK)
@@ -311,37 +311,13 @@ def filmStrip():
         for i in range (0,8):
             strip.blit(thumb_strip[i],(thumb_strip_pad * GRID_W_PX,((thumb_index+i)%8)*thumb_h_pos))
         return DISPLAYSURF.blit(strip,(GRID_W_PX * thumb_strip_x, GRID_H_PX * thumb_strip_y))
-
-def updateThumb(image):
-    global thumb_strip
-    thumb_size = (int(thumb_photo_width * GRID_W_PX), int(thumb_photo_height * GRID_H_PX))
-    for i in range (7,0,-1):
-        try:
-            thumb_strip[i] = thumb_strip[i - 1]
-        except:
-            thumb_strip[i] = pygame.Surface(thumb_size)
-            thumb_strip[i].fill(blank_thumb)
-        try:
-            os.rename(thumb_loc+str(i)+'.jpg',thumb_loc+str(i+1)+'.jpg')
-        except:
-            continue
-    image.save(thumb_loc+str(1)+'.jpg')
-#    photo_edit = pgmagick.Image(image)
-#    photo_edit.quality(100)
-#    photo_edit.scale(str(thumb_size[0])+'x'+str(thumb_size[1]))
-#    photo_edit.write(thumb_loc+'1.jpg')
-    thumb_strip[0] = pygame.image.load(thumb_loc+str(1)+'.jpg').convert()
-    thumb_strip[0] = pygame.transform.smoothscale(thumb_strip[0],thumb_size)
         
 def loadThumbs():
     global thumb_strip
     thumb_size = (int(thumb_photo_width * GRID_W_PX), int(thumb_photo_height * GRID_H_PX))
-
     i = 0
-    
     for dirName, subdirList, fileList in os.walk(rawPath):
         for fname in fileList:
-            #print('\t%s' % fname)
             try:
                 thumb_strip.append(pygame.image.load(rawPath + fname).convert())
                 thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
@@ -353,13 +329,6 @@ def loadThumbs():
                 thumb_strip.append(pygame.Surface(thumb_size))
                 thumb_strip[i].fill(blank_thumb)
 
-    #for i in range (0,8):
-        #try:
-           #thumb_strip.append(pygame.image.load(thumb_loc+str(i+1)+'.jpg').convert())
-            #thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
-        #except:
-            #thumb_strip.append(pygame.Surface(thumb_size))
-            #thumb_strip[i].fill(blank_thumb)
 
 def makeTextObjs(text, font, color):
     surf = font.render(text, True, color)
@@ -369,15 +338,12 @@ def terminate():
     CAMERA.stop_preview()
     CAMERA.close()
     pygame.quit()
-##    sys.exit()
 
 def powerOff():
     CAMERA.stop_preview()
     CAMERA.close()
     showTextScreen('Shutting Down','')
     pygame.quit()
-##    os.system('poweroff')
-##    sys.exit()
     
 def checkForQuit():
     for event in pygame.event.get(QUIT): # get all the QUIT events
@@ -410,9 +376,7 @@ def showTextScreen(text, text2):
 
 def setupDisplay():
     disp_no = os.getenv("DISPLAY")
-##    if disp_no:
-##        print "I'm running under X display = {0}".format(disp_no)
-    
+
     # Check which frame buffer drivers are available
     # Start with fbcon since directfb hangs with composite output
     drivers = ['fbcon', 'directfb', 'svgalib']

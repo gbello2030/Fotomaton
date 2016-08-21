@@ -23,8 +23,8 @@ PASS = 'Gbc2015Gbc'
 
 ########### MODIFY IF YOU WANT ############
 
-SERVER = 'gbello.xyz'
-PORT = 4422
+SERVER = '192.168.1.103'
+PORT = 22
 BINARY_STORE = True # if False then line store (not valid for binary files (videos, music, photos...))
 
 ###########################################
