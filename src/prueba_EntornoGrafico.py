@@ -206,8 +206,8 @@ def photoShoot(numPhotos):
     CAMERA.stop_preview()
     showTextScreen('Fotomaton','Procesando...')
 
-    #processPhoto(image)
-    procesarFotos(image)
+    processPhoto(image)
+    #procesarFotos(image)
     
     #printPhoto('/usr/photobooth/print_image.jpg',image)
     CAMERA.resolution = preview_resolution
@@ -215,29 +215,31 @@ def photoShoot(numPhotos):
     CAMERA.start_preview()
     
 def processPhoto(photos):
-    save_name = str(time.time())
-    montage = Image.new('RGBA',print_size,WHITE)
-    paste_x = 0
-    paste_y = 0
-    for photo in photos:
-        photo.save('/home/pi/fotomaton/imagenes/raw/'+save_name+'-'+str(paste_x)+str(paste_y)+'.jpg','JPEG',quality=80)
-       
-        photo_h = int(print_size[1]/2)
+    marco = Image.open(marcosPath +"/marco_motos.jpg")
+    img_size = [467,373]
+    nombreComposicion = str(time.time())
+    composicion = Image.new('RGBA',marco.size,WHITE)
+    paste_x = 182
+    paste_y = 33
 
-        photo_w = int(photo_h * (photo.size[0] / photo.size[1]))-10
-        resized = photo.resize((photo_w,photo_h),Image.ANTIALIAS)
-        montage.paste(resized,(paste_x+20,paste_y))
-        if paste_x == 0 and paste_y == 0 :
-            paste_x = photo_w
-        elif paste_x > 0 and paste_y == 0 :
-            paste_x = 0
-            paste_y = photo_h
+    composicion.paste(marco,(0,0))
+
+    for photo in photos:
+        save_name = str(time.time())
+        foto.save(rawPath + save_name + '.jpg','JPEG',quality=100)
+        resized = photo.resize((img_size[0],img_size[1]),Image.ANTIALIAS)
+        composicion.paste(resized,(paste_x,paste_y))
+        if paste_x == 182 and paste_y == 33 :
+            paste_x = 689
+        elif paste_x == 689 and paste_y == 33 :
+            paste_x = 182
+            paste_y = 529
         else :
-            paste_x = photo_w
-            paste_y = photo_h
-    logo = Image.open("/home/pi/fotomaton/imagenes/marcos/mask_V.png")
-    montage.paste(logo,(print_size[0]-220-20,0))
-    montage.save("/home/pi/fotomaton/imagenes/composiciones/" + str(time.time()) + ".jpg","JPEG",quality=100)
+            paste_x = 689
+            paste_y = 530
+
+
+    composicion.save(composicionesPath + '/' + nombreComposicion + ".jpg","JPEG",quality=100)
 
 
 def procesarFotos(fotos):
