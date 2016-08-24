@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ##from __future__ import division
-import os, pygame, time, picamera, io, sys, shutil
+import os, pygame, time, picamera, io, sys
 import PIL
 from PIL import Image
 from pygame.locals import *
@@ -213,6 +213,8 @@ def photoShoot(numPhotos):
     CAMERA.resolution = preview_resolution
     CAMERA.preview_fullscreen = False
     CAMERA.start_preview()
+    CAMERA.awb_mode = 'auto'
+    CAMERA.exposure_mode = 'auto'
     
 def processPhoto(photos):
     marco = Image.open(marcosPath +"/marco_motos.jpg")
@@ -295,7 +297,11 @@ def idleScreen():
     titleSurf, titleRect = makeTextObjs('Fotomaton', BIGFONT, GRAY)
     titleRect.bottomleft = (borderRect[0] + preview_pad * GRID_W_PX ,borderRect[1])
     DISPLAYSURF.blit(titleSurf, titleRect)
+
     CAMERA.start_preview()
+    CAMERA.awb_mode = 'auto'
+    CAMERA.exposure_mode = 'auto'
+
     pygame.display.update()
     thumb_last_sw = 0
     while not pygame.event.peek(KEYDOWN):
