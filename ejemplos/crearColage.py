@@ -1,6 +1,8 @@
 import time
 import PIL
 from PIL import Image
+from moviepy.editor import *
+
 
 imgPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/raw'
 composicionesPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/composiciones'
@@ -33,20 +35,23 @@ marcosPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/marcos'
 #        paste_y = 530
 
 
-marco = Image.open(marcosPath +"/marco_motos_polaroid.jpg")
+#marco = Image.open(marcosPath +"/marco_motos_polaroid.jpg")
+#
+#img_size = [781, 827]
+#nombreComposicion = 'POLAROID'
+#paste_x = 107
+#paste_y = 127
+#
+#photo = Image.open(imgPath + '/1.png')
+#
+#resized = photo.resize((img_size[0],img_size[1]),Image.ANTIALIAS)
+#marco.paste(resized,(paste_x,paste_y))
+#
+#
+#marco.save(composicionesPath + '/' + nombreComposicion + ".jpg","JPEG",quality=100)
 
-img_size = [781, 827]
-nombreComposicion = 'POLAROID'
-paste_x = 107
-paste_y = 127
-
-photo = Image.open(imgPath + '/1.png')
-
-resized = photo.resize((img_size[0],img_size[1]),Image.ANTIALIAS)
-marco.paste(resized,(paste_x,paste_y))
-
-
-marco.save(composicionesPath + '/' + nombreComposicion + ".jpg","JPEG",quality=100)
-
+#image_list = imgPath
+#my_clip = ImageSequenceClip(image_list, fps=2)
+#my_clip.write_gif(composicionesPath + "/test.gif")
 
 print('FINALIZADO')
