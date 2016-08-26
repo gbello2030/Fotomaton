@@ -104,9 +104,27 @@ def texto(texto, posx, posy, color=(255, 255, 255)):
     salida_rect.centerx = posx
     salida_rect.centery = posy
     return salida, salida_rect
+
+def showTextScreen(text):
+
+    #variables para el texto
+    GRAY        = (185, 185, 185, 255)
+    BIGFONT = pygame.font.Font('freesansbold.ttf', 20)
+        
+    # Draw the text drop shadow
+    titleSurf, titleRect = makeTextObjs(text, BIGFONT, GRAY)
+    titleRect.center = (int(WIDTH / 2), 10)
+    screen.blit(titleSurf, titleRect)
+
+    pygame.display.update()
+
+def makeTextObjs(text, font, color):
+    surf = font.render(text, True, color)
+    return surf, surf.get_rect()
 # ---------------------------------------------------------------------
  
 def main():
+    global screen
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Pruebas Pygame")
  
@@ -127,6 +145,7 @@ def main():
                 sys.exit(0)
  
         puntos = bola.actualizar(time, pala_jug, pala_cpu, puntos)
+        showTextScreen('MARCADOR')
         pala_jug.mover(time, keys)
         pala_cpu.ia(time, bola)
 
