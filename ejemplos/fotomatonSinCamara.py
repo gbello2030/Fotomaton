@@ -22,7 +22,7 @@ grid_height = 60
 # photo preview in grid units
 preview_pad    = 1
 preview_x      = 4
-preview_y      = 16
+preview_y      = 17
 preview_width  = 48
 preview_height = 40
 
