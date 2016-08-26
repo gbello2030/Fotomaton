@@ -33,7 +33,7 @@ thumb_strip_y      = 0
 thumb_strip_width  = 25
 thumb_strip_height = grid_height
 thumb_photo_width  = thumb_strip_width - 2 * thumb_strip_pad
-thumb_photo_height = thumb_photo_width * 3 / 4
+thumb_photo_height = thumb_photo_width * 5/6
 
 # font sizes in grid units
 basic_font_size    = 4
