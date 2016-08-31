@@ -1,3 +1,8 @@
+'''
+Created on 30 de ago. de 2016
+
+@author: gbelloca
+'''
 #!/usr/bin/python
 ##from __future__ import division
 import os, pygame, time, sys
