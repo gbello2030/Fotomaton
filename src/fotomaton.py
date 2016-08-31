@@ -112,8 +112,8 @@ def main():
     GRID_H_PX = int(WINDOWHEIGHT / grid_height)
     FPSCLOCK = pygame.time.Clock()
     pygame.mouse.set_visible(True)  # hide the mouse cursor
-    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
-# #    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
+# #    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
+    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
     BIGFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * big_font_size))
     HUGEFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * huge_font_size))
