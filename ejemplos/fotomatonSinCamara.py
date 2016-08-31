@@ -46,14 +46,12 @@ big_font_size      = 8
 huge_font_size     = 50
 
 #Rutas basicas del fotomaton
+imgPath = '/home/pi/fotomaton/imagenes/'
+marcosPath = '/home/pi/fotomaton/imagenes/marcos/'
+composicionesPath = '/home/pi/fotomaton/imagenes/composiciones/'
+rawPath = '/home/pi/fotomaton/imagenes/raw/'
+thumb_loc = '/home/pi/fotomaton/imagenes/thumb/'
 
-
-
-imgPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/raw/'
-composicionesPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/composiciones/'
-marcosPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/marcos/'
-thumb_loc = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/thumb/'
-rawPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/raw/'
 
 thumb_size = (400,300)
 thumb_time = 2
@@ -78,12 +76,13 @@ def main():
     WINDOWHEIGHT = pygame.display.Info().current_h
 
     GRID_W_PX   = int(WINDOWWIDTH / grid_width)
-    
     GRID_H_PX    = int(WINDOWHEIGHT / grid_height)
+    
     FPSCLOCK = pygame.time.Clock()
+    
     pygame.mouse.set_visible(True) #hide the mouse cursor
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
-    #DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
+##    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
     BIGFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * big_font_size))
     HUGEFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * huge_font_size))
@@ -120,7 +119,7 @@ def idleScreen():
     DISPLAYSURF.fill(WHITE)
 
     #Ponemos el fondo que queramos
-    background_image = cargar_imagen( marcosPath + 'fondo_fotomaton.jpg', False, False)
+    background_image = cargar_imagen( marcosPath + 'fondo_fotomaton.jpg', True, False)
     DISPLAYSURF.blit(background_image, (0, 0))
 
     #En este bloque se definen los parametros de la previsualización de la camara

@@ -15,18 +15,7 @@ BLACK       = (  0,   0,   0, 255)
 DARKBLUE    = (  0,   0, 100, 255)
 TEXTSHADOWCOLOR = GRAY
 TEXTCOLOR = WHITE
-BGCOLOR = DARKBLUE
-
-# printout size
-print_2x6 = False
-print_2up = False
-print_width = 2 if print_2x6 else 6 #inches
-print_height = 6 if print_2x6 else 4 #inches
-print_w_dpi = 330
-print_h_dpi = 330
-print_size = (print_width * print_w_dpi, print_height * print_h_dpi)
-
-
+BGCOLOR = WHITE
 
 # layout - each "grid" is 8x8px at 640x480
 grid_width = 80
@@ -35,7 +24,7 @@ grid_height = 60
 # photo preview in grid units
 preview_pad    = 1
 preview_x      = 4
-preview_y      = 14
+preview_y      = 17
 preview_width  = 48
 preview_height = 40
 
@@ -43,10 +32,10 @@ preview_height = 40
 thumb_strip_pad    = 1
 thumb_strip_x      = 54
 thumb_strip_y      = 0
-thumb_strip_width  = 20
+thumb_strip_width  = 25
 thumb_strip_height = grid_height
 thumb_photo_width  = thumb_strip_width - 2 * thumb_strip_pad
-thumb_photo_height = thumb_photo_width * 3 / 4
+thumb_photo_height = thumb_photo_width * 5/6
 
 # font sizes in grid units
 basic_font_size    = 4
@@ -65,6 +54,7 @@ thumb_time = 2
 thumb_last_sw = 0
 thumb_index = 1
 thumb_strip = []
+thumb_files_number = 0
 
 preview_resolution = (1296,972)
 preview_alpha  = 200
@@ -103,14 +93,19 @@ def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, HUGEFONT, WINDOWWIDTH, WINDOWHEIGHT, CAMERA, GRID_W_PX, GRID_H_PX
     setupDisplay()
     pygame.init()
+
+    # TAMAÑO DE LA PANTALLA
     WINDOWWIDTH = pygame.display.Info().current_w
-    GRID_W_PX   = int(WINDOWWIDTH / grid_width)
     WINDOWHEIGHT = pygame.display.Info().current_h
+
+    GRID_W_PX   = int(WINDOWWIDTH / grid_width)
     GRID_H_PX    = int(WINDOWHEIGHT / grid_height)
+
     FPSCLOCK = pygame.time.Clock()
+    
     pygame.mouse.set_visible(True) #hide the mouse cursor
-    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
-##    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
+##    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
+    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
     BIGFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * big_font_size))
     HUGEFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * huge_font_size))
@@ -228,7 +223,7 @@ def processPhoto(photos):
 
     for photo in photos:
         save_name = str(time.time())
-        foto.save(rawPath + save_name + '.jpg','JPEG',quality=100)
+        photo.save(rawPath + save_name + '.jpg','JPEG',quality=100)
         resized = photo.resize((img_size[0],img_size[1]),Image.ANTIALIAS)
         composicion.paste(resized,(paste_x,paste_y))
         if paste_x == 182 and paste_y == 33 :
@@ -242,7 +237,8 @@ def processPhoto(photos):
 
 
     composicion.save(composicionesPath + '/' + nombreComposicion + ".jpg","JPEG",quality=100)
-
+    displayImage(composicionesPath + '/' + nombreComposicion + ".jpg")
+    time.sleep(10)
 
 def procesarFotos(fotos):
     ancho_img = 581
@@ -266,10 +262,10 @@ def procesarFotos(fotos):
     imageComposite_V.save( composicionesPath + str(time.time()) + ".jpg","JPEG",quality=100)
 
 
-def displayImage(image):
-    image = pygame.transform.scale(pygame.image.load(image),(WINDOWWIDTH,WINDOWHEIGHT))
-    DISPLAYSURF.blit(image,(0,0))
-    pygame.display.update()
+##def displayImage(image):
+##    image = pygame.transform.scale(pygame.image.load(image),(WINDOWWIDTH,WINDOWHEIGHT))
+##    DISPLAYSURF.blit(image,(0,0))
+##    pygame.display.update()
     
 def takePhoto():
     stream = io.BytesIO() # create an IO stream to save the image to
@@ -288,15 +284,21 @@ def idleScreen():
     CAMERA.preview_alpha = preview_alpha
     CAMERA.led = False
     DISPLAYSURF.fill(BGCOLOR)
+
+    #Ponemos el fondo que queramos
+    background_image = cargar_imagen( marcosPath + 'fondo_fotomaton.jpg', True, False)
+    DISPLAYSURF.blit(background_image, (0, 0))
+    
+    #En este bloque se definen los parametros de la previsualización de la camara
     border = pygame.Surface((GRID_W_PX * preview_width, GRID_H_PX * preview_height))
     border.fill(BLACK)
     borderRect = DISPLAYSURF.blit(border,(GRID_W_PX * preview_x, GRID_H_PX * preview_y))
-    startSurf, startRect = makeTextObjs('Press Start', BASICFONT, WHITE)
+    startSurf, startRect = makeTextObjs('Dale al botón ROJO', BASICFONT, WHITE)
     startRect.midbottom = (borderRect[2]/2+borderRect[0],borderRect[3]+borderRect[1]-10)
     DISPLAYSURF.blit(startSurf, startRect)
-    titleSurf, titleRect = makeTextObjs('Fotomaton', BIGFONT, GRAY)
-    titleRect.bottomleft = (borderRect[0] + preview_pad * GRID_W_PX ,borderRect[1])
-    DISPLAYSURF.blit(titleSurf, titleRect)
+    #titleSurf, titleRect = makeTextObjs('Fotomaton', BIGFONT, GRAY)
+    #titleRect.bottomleft = (borderRect[0] + preview_pad * GRID_W_PX ,borderRect[1])
+    #DISPLAYSURF.blit(titleSurf, titleRect)
 
     CAMERA.start_preview()
     CAMERA.awb_mode = 'auto'
@@ -310,32 +312,37 @@ def idleScreen():
 
 def filmStrip():
     global thumb_index, thumb_last_sw
+
+    if len(os.listdir(rawPath)) > thumb_files_number:
+        loadThumbs()
+
     if time.time() - thumb_time > thumb_last_sw:
         thumb_last_sw = time.time()
         strip = pygame.Surface((thumb_strip_width * GRID_W_PX, thumb_strip_height * GRID_H_PX),pygame.SRCALPHA)
         strip.fill(BLACK)
         thumb_h_pos = (thumb_photo_height + thumb_strip_pad) * GRID_H_PX
         thumb_index += 1
-        for i in range (0,8):
-            strip.blit(thumb_strip[i],(thumb_strip_pad * GRID_W_PX,((thumb_index+i)%8)*thumb_h_pos))
+        for i in range (0,thumb_files_number):
+            strip.blit(thumb_strip[i],(thumb_strip_pad * GRID_W_PX,((thumb_index+i)%thumb_files_number)*thumb_h_pos))
         return DISPLAYSURF.blit(strip,(GRID_W_PX * thumb_strip_x, GRID_H_PX * thumb_strip_y))
         
 def loadThumbs():
     global thumb_strip
+    del thumb_strip[:] # ELIMINA EL CONTENIDO DEL ARRAY DE IMAGENES LATERALES
+    
+    global thumb_files_number
+
     thumb_size = (int(thumb_photo_width * GRID_W_PX), int(thumb_photo_height * GRID_H_PX))
-    i = 0
     for dirName, subdirList, fileList in os.walk(rawPath):
+        thumb_files_number = len(fileList)
         for fname in fileList:
             try:
-                thumb_strip.append(pygame.image.load(rawPath + fname).convert())
-                thumb_strip[i] = pygame.transform.smoothscale(thumb_strip[i],thumb_size)
-                if(i < len(fileList)):
-                    i = i + 1
-                else:
-                    i = 0
+               thumb_strip.append(pygame.transform.smoothscale(pygame.image.load(rawPath + fname).convert(),thumb_size))
             except:
                 thumb_strip.append(pygame.Surface(thumb_size))
                 thumb_strip[i].fill(blank_thumb)
+
+
 
 
 def makeTextObjs(text, font, color):
@@ -381,6 +388,29 @@ def showTextScreen(text, text2):
     DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
 
     pygame.display.update()
+
+
+def cargar_imagen(filename, transformar=True, transparent=False):
+    try: 
+        if transformar:
+            image = pygame.transform.smoothscale(pygame.image.load(filename).convert(),(WINDOWWIDTH,WINDOWHEIGHT))
+        else:
+            image = pygame.image.load(filename)
+    except pygame.error:
+            raise Exception('ERROR AL CARGAR LA IMAGEN')
+            raise SystemExit
+            
+    #image = image.convert()
+    if transparent:
+            color = image.get_at((0,0))
+            image.set_colorkey(color, RLEACCEL)
+    return image
+
+def displayImage(rutaImagen):
+    image = pygame.transform.scale(pygame.image.load(rutaImagen),(WINDOWWIDTH,WINDOWHEIGHT))
+    DISPLAYSURF.blit(image,(0,0))
+    pygame.display.update()
+    
 
 def setupDisplay():
     disp_no = os.getenv("DISPLAY")
