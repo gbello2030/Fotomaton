@@ -54,4 +54,26 @@ marcosPath = 'D:/Descargas/RaspBerry/proyectos_Python/Fotomaton/imagenes/marcos'
 #my_clip = ImageSequenceClip(image_list, fps=2)
 #my_clip.write_gif(composicionesPath + "/test.gif")
 
+
+def procesarFotos(fotos):
+    ancho_img = 581
+    alto_img = 585
+
+    marcoFoto = Image.open(marcosPath + 'pelicula_VERTICAL-GRANDE.jpg')
+    separador = Image.open(marcosPath + 'separador.jpg')
+    imageComposite_V = Image.new("RGBA", (marcoFoto.size[0], marcoFoto.size[1]), BLANCO)
+    imageComposite_V.paste(marcoFoto, (0, 0))
+
+    vertical_Px = 24
+    horizontal_PX = 125
+
+    for foto in fotos:
+        save_name = str(time.time())
+        foto.save(rawPath + save_name + '.jpg', 'JPEG', quality=100)
+        imageComposite_V.paste(foto.resize([ancho_img, alto_img]), (horizontal_PX, vertical_Px))
+        imageComposite_V.paste(separador, (horizontal_PX, vertical_Px + alto_img))
+        vertical_Px = vertical_Px + alto_img + separador.size[1]
+
+    imageComposite_V.save(composicionesPath + str(time.time()) + ".jpg", "JPEG", quality=100)
+
 print('FINALIZADO')

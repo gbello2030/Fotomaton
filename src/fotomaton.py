@@ -15,14 +15,17 @@ import threading
 
 
 FPS = 25
-#               R    G    B    A
-WHITE = (255, 255, 255, 255)
-GRAY = (185, 185, 185, 255)
-BLACK = (0, 0, 0, 255)
-DARKBLUE = (0, 0, 100, 255)
-TEXTSHADOWCOLOR = GRAY
-TEXTCOLOR = WHITE
-BGCOLOR = WHITE
+
+#COLORES
+# R    G    B    A
+BLANCO = (255, 255, 255, 255)
+GRIS = (185, 185, 185, 255)
+NEGRO = (0, 0, 0, 255)
+
+COLOR_SOMBRA_TEXTO = GRIS
+COLOR_TEXTO = BLANCO
+
+BGCOLOR = BLANCO
 
 # layout - each "grid" is 8x8px at 640x480
 grid_width = 80
@@ -34,6 +37,13 @@ preview_x = 4
 preview_y = 17
 preview_width = 48
 preview_height = 40
+
+preview_resolution = (1296, 972)
+preview_alpha = 200
+blank_thumb = (20, 20, 20, 255)
+
+
+tiempoPrevisualizarComposicion = 5
 
 # thumb strip in grid units
 thumb_strip_pad = 1
@@ -63,10 +73,6 @@ thumb_last_sw = 0
 thumb_index = 1
 thumb_strip = []
 thumb_files_number = 0
-
-preview_resolution = (1296, 972)
-preview_alpha = 200
-blank_thumb = (20, 20, 20, 255)
 
 # GPIO 
 GPIO.setmode(GPIO.BCM)
@@ -99,7 +105,7 @@ GPIO.output(io_cameara_led, True)
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, HUGEFONT, WINDOWWIDTH, WINDOWHEIGHT, CAMERA, GRID_W_PX, GRID_H_PX
-    setupDisplay()
+    configurarPantalla()
     pygame.init()
 
 
@@ -112,8 +118,8 @@ def main():
     GRID_H_PX = int(WINDOWHEIGHT / grid_height)
     FPSCLOCK = pygame.time.Clock()
     pygame.mouse.set_visible(True)  # hide the mouse cursor
-# #    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
-    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
+    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
+# #    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
     BIGFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * big_font_size))
     HUGEFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * huge_font_size))
@@ -121,18 +127,18 @@ def main():
     
     CAMERA = picamera.PiCamera()
     CAMERA.drc_strength = ('medium')
-    showTextScreen('Fotomatón', 'Cargando...')
+    mostarTextoEnPantalla('Fotomatón', 'Cargando...')
 
     #Carga de los thumbnails de las imagenes que se han ido sacando
-    loadThumbs()
-    GPIO.add_event_detect(io_start_bttn, GPIO.FALLING, callback=buttonEvent, bouncetime=1000)
-    GPIO.add_event_detect(io_enter_bttn, GPIO.FALLING, callback=buttonEvent, bouncetime=1000)
-    GPIO.add_event_detect(io_up_bttn, GPIO.FALLING, callback=buttonEvent, bouncetime=1000)
-    GPIO.add_event_detect(io_dn_bttn, GPIO.FALLING, callback=buttonEvent, bouncetime=1000)
+    cargarImagenesGaleria()
+    GPIO.add_event_detect(io_start_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(io_enter_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(io_up_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(io_dn_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
     pygame.event.clear()
     
     while True:
-        # checkForQuit()
+        checkForQuit()
         GPIO.output(io_start_light, False)
         GPIO.output(io_enter_light, False)
         GPIO.output(io_up_light, False)
@@ -143,7 +149,7 @@ def main():
                 GPIO.output(io_start_light, False)
                 if event.key == K_ESCAPE:
                     pygame.event.clear()
-                    powerOff()  # terminate if the KEYUP event was for the Esc key
+                    terminate()  # terminate if the KEYUP event was for the Esc key
                 elif event.key == K_SPACE:
                     pygame.event.clear()
                     sacarFotosMultiple(4)
@@ -152,11 +158,11 @@ def main():
                     pygame.event.clear()
                     terminate()
         GPIO.output(io_start_light, True)
-        idleScreen()
+        pantallaPrincipal()
     terminate()
     
 # Turn GPIO (button) events into pygame key down events
-def buttonEvent(channel):
+def eventosBoton(channel):
     # time.sleep(0.001)
     if GPIO.input(channel) == 1 :
         if channel == io_start_bttn:
@@ -175,11 +181,11 @@ def buttonEvent(channel):
     
 def sacarFotosMultiple(numPhotos):
     imageArray = []
-    DISPLAYSURF.fill(BLACK)
+    DISPLAYSURF.fill(NEGRO)
     CAMERA.preview_fullscreen = True
 ##    CAMERA.preview_fullscreen = False
     CAMERA.preview_alpha = preview_alpha
-    readySurf, readyRect = makeTextObjs('Preparados...', BIGFONT, WHITE)
+    readySurf, readyRect = crearObjetosTexto('Preparados...', BIGFONT, BLANCO)
     readyRect.midbottom = (WINDOWWIDTH / 2, WINDOWHEIGHT / 10 * 9)
     DISPLAYSURF.blit(readySurf, readyRect)
     pygame.display.update()
@@ -189,28 +195,28 @@ def sacarFotosMultiple(numPhotos):
         time.sleep(0.1)
         # Cuenta atrás para sacar la foto, muestra los numeros en grande en la pantalla.
         for i in range (5, 0, -1):
-            DISPLAYSURF.fill(BLACK)
-            numSurf, numRect = makeTextObjs(str(i), HUGEFONT, WHITE)
+            DISPLAYSURF.fill(NEGRO)
+            numSurf, numRect = crearObjetosTexto(str(i), HUGEFONT, BLANCO)
             numRect.center = (WINDOWWIDTH / 2, WINDOWHEIGHT / 2 - GRID_H_PX)
             DISPLAYSURF.blit(numSurf, numRect)
-            numphotosSurf, numphotosRect = makeTextObjs('Foto ' + str(photo + 1) + ' de ' + str(numPhotos), BIGFONT, WHITE)
+            numphotosSurf, numphotosRect = crearObjetosTexto('Foto ' + str(photo + 1) + ' de ' + str(numPhotos), BIGFONT, BLANCO)
             numphotosRect.midbottom = (WINDOWWIDTH / 2, WINDOWHEIGHT - GRID_H_PX * 4)
             DISPLAYSURF.blit(numphotosSurf, numphotosRect)
             pygame.display.update()
             time.sleep(0.8)  # cada numero se muestra este tiempo
         
         # Se limpia la pantalla.
-        DISPLAYSURF.fill(BLACK)
-        takephotoSurf, takephotoRect = makeTextObjs('Capturando foto ' + str(photo + 1), BIGFONT, WHITE)
+        DISPLAYSURF.fill(NEGRO)
+        takephotoSurf, takephotoRect = crearObjetosTexto('Capturando foto ' + str(photo + 1), BIGFONT, BLANCO)
         takephotoRect.midbottom = (WINDOWWIDTH / 2, WINDOWHEIGHT / 10 * 9)
         DISPLAYSURF.blit(takephotoSurf, takephotoRect)
         pygame.display.update()
         imageArray.append(capturarFoto())  # Se captura la foto
         
-    DISPLAYSURF.fill(BLACK)  # Se limpia la pantalla.
+    DISPLAYSURF.fill(NEGRO)  # Se limpia la pantalla.
     pygame.display.update()
     CAMERA.stop_preview()
-    showTextScreen('Fotomaton', 'Procesando...')
+    mostarTextoEnPantalla('Fotomaton', 'Procesando...')
 
     crearComposicionCuadricula(imageArray)
     # procesarFotos(imageArray)
@@ -225,7 +231,7 @@ def crearComposicionCuadricula(imageArray):
     marco = Image.open(marcosPath + "/marco_motos.jpg")
     img_size = [467, 373]
     nombreComposicion = str(time.time())
-    composicion = Image.new('RGBA', marco.size, WHITE)
+    composicion = Image.new('RGBA', marco.size, BLANCO)
     paste_x = 182
     paste_y = 33
 
@@ -252,11 +258,9 @@ def crearComposicionCuadricula(imageArray):
 
     
     composicion.save(composicionesPath + '/' + nombreComposicion + ".jpg", "JPEG", quality=100)
+    mostrarImagen(composicionesPath + '/' + nombreComposicion + ".jpg")
+    time.sleep(tiempoPrevisualizarComposicion) #Se muestra la imagen creada durante el numero de segundos indicado
 
-def guardarImagenThumb(imagen, nombreThumb):
-    resized = imagen.resize(thumb_size, Image.ANTIALIAS)
-    resized.save(thumbPath + nombreThumb + '.jpg', 'JPEG', quality=100)
-    
 def crearComposicionPolaroid(imagen):
     marco = Image.open(marcosPath +"/marco_motos_polaroid.jpg")
     
@@ -269,30 +273,19 @@ def crearComposicionPolaroid(imagen):
     marco.paste(resized,(paste_x,paste_y))
     marco.save(composicionesPolaroidPath + '/' + nombreComposicion + ".jpg","JPEG",quality=100)
     
-
-def procesarFotos(fotos):
-    ancho_img = 581
-    alto_img = 585
-
-    marcoFoto = Image.open(marcosPath + 'pelicula_VERTICAL-GRANDE.jpg')
-    separador = Image.open(marcosPath + 'separador.jpg')
-    imageComposite_V = Image.new("RGBA", (marcoFoto.size[0], marcoFoto.size[1]), WHITE)
-    imageComposite_V.paste(marcoFoto, (0, 0))
-
-    vertical_Px = 24
-    horizontal_PX = 125
-
-    for foto in fotos:
-        save_name = str(time.time())
-        foto.save(rawPath + save_name + '.jpg', 'JPEG', quality=100)
-        imageComposite_V.paste(foto.resize([ancho_img, alto_img]), (horizontal_PX, vertical_Px))
-        imageComposite_V.paste(separador, (horizontal_PX, vertical_Px + alto_img))
-        vertical_Px = vertical_Px + alto_img + separador.size[1]
-
-    imageComposite_V.save(composicionesPath + str(time.time()) + ".jpg", "JPEG", quality=100)
-
-
+    #Se lanza en otro hilo de ejecucion el redimensionado de la imagen para los Thumb
+    hiloCrearThumb = threading.Thread(target=guardarImagenThumb, name='Redimensionado', args=(imagen, nombreComposicion,))
+    hiloCrearThumb.start()
     
+    mostrarImagen(composicionesPolaroidPath + '/' + nombreComposicion + ".jpg")
+    time.sleep(tiempoPrevisualizarComposicion) #Se muestra la imagen creada durante el numero de segundos indicado
+    
+    
+def guardarImagenThumb(imagen, nombreThumb):
+    resized = imagen.resize(thumb_size, Image.ANTIALIAS)
+    resized.save(thumbPath + nombreThumb + '.jpg', 'JPEG', quality=100)
+    
+
 def capturarFoto():
     stream = io.BytesIO()  # IO stream para guardar la imagen
     GPIO.output(io_cameara_led, True)
@@ -302,7 +295,7 @@ def capturarFoto():
     foto = Image.open(stream)  # Se crea un objeto de imagen PIL para procesarse luego
     return foto
 
-def idleScreen():
+def pantallaPrincipal():
     global thumb_last_sw
     CAMERA.preview_fullscreen = False
     CAMERA.resolution = preview_resolution
@@ -317,9 +310,9 @@ def idleScreen():
 
     # En este bloque se definen los parametros de la previsualización de la camara
     border = pygame.Surface((GRID_W_PX * preview_width, GRID_H_PX * preview_height))
-    border.fill(BLACK)
+    border.fill(NEGRO)
     borderRect = DISPLAYSURF.blit(border, (GRID_W_PX * preview_x, GRID_H_PX * preview_y))
-    startSurf, startRect = makeTextObjs('Pulsa el rojo', BASICFONT, WHITE)
+    startSurf, startRect = crearObjetosTexto('Pulsa el rojo', BASICFONT, BLANCO)
     startRect.midbottom = (borderRect[2] / 2 + borderRect[0], borderRect[3] + borderRect[1] - 10)
     DISPLAYSURF.blit(startSurf, startRect)
 
@@ -330,26 +323,26 @@ def idleScreen():
     pygame.display.update()
     thumb_last_sw = 0
     while not pygame.event.peek(KEYDOWN):
-        pygame.display.update(filmStrip())
+        pygame.display.update(galeriaImagenesLateral())
         FPSCLOCK.tick(FPS)
 
-def filmStrip():
+def galeriaImagenesLateral():
     global thumb_index, thumb_last_sw
 
     if len(os.listdir(rawPath)) > thumb_files_number:
-        loadThumbs()
+        cargarImagenesGaleria()
 
     if time.time() - thumb_time > thumb_last_sw:
         thumb_last_sw = time.time()
         strip = pygame.Surface((thumb_strip_width * GRID_W_PX, thumb_strip_height * GRID_H_PX), pygame.SRCALPHA)
-        strip.fill(BLACK)
+        strip.fill(NEGRO)
         thumb_h_pos = (thumb_photo_height + thumb_strip_pad) * GRID_H_PX
         thumb_index += 1
         for i in range (0, thumb_files_number):
             strip.blit(thumb_strip[i], (thumb_strip_pad * GRID_W_PX, ((thumb_index + i) % thumb_files_number) * thumb_h_pos))
         return DISPLAYSURF.blit(strip, (GRID_W_PX * thumb_strip_x, GRID_H_PX * thumb_strip_y))
         
-def loadThumbs():
+def cargarImagenesGaleria():
     global thumb_strip
     del thumb_strip[:]  # ELIMINA EL CONTENIDO DEL ARRAY DE IMAGENES LATERALES
     
@@ -366,45 +359,41 @@ def loadThumbs():
                 thumb_strip[0].fill(blank_thumb)
 
 
-def makeTextObjs(text, font, color):
+def crearObjetosTexto(text, font, color):
     surf = font.render(text, True, color)
     return surf, surf.get_rect()
 
 def terminate():
     CAMERA.stop_preview()
     CAMERA.close()
+    mostarTextoEnPantalla('Cerrando', '')
     pygame.quit()
 
-def powerOff():
-    CAMERA.stop_preview()
-    CAMERA.close()
-    showTextScreen('Shutting Down', '')
-    pygame.quit()
     
 def checkForQuit():
-    for event in pygame.event.get(QUIT):  # get all the QUIT events
-        terminate()  # terminate if any QUIT events are present
-    for event in pygame.event.get(KEYUP):  # get all the KEYUP events
+    for event in pygame.event.get(QUIT):  # obtiene todos los eventos de tipo QUIT
+        terminate()  # llama al terminate si algun evento de tipo QUIT se ha invocado
+    for event in pygame.event.get(KEYUP):  # obtiene todos los eventos de tipo KEYUP
         if event.key == K_ESCAPE:
-            powerOff()  # terminate if the KEYUP event was for the Esc key
-        pygame.event.post(event)  # put the other KEYUP event objects back
+            terminate()  # llama al terminate spulsado la tecla Esc
+        pygame.event.post(event)  # Se ponen de nuevo los eventos de tipo KEYUP
 
-def showTextScreen(text, text2):
+def mostarTextoEnPantalla(text, text2):
     # This function displays large text in the
-    DISPLAYSURF.fill(BLACK)
+    DISPLAYSURF.fill(NEGRO)
     
     # Draw the text drop shadow
-    titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTSHADOWCOLOR)
+    titleSurf, titleRect = crearObjetosTexto(text, BIGFONT, COLOR_SOMBRA_TEXTO)
     titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2))
     DISPLAYSURF.blit(titleSurf, titleRect)
 
     # Draw the text
-    titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTCOLOR)
+    titleSurf, titleRect = crearObjetosTexto(text, BIGFONT, COLOR_TEXTO)
     titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) - 3)
     DISPLAYSURF.blit(titleSurf, titleRect)
 
     # Draw the additional "Press a key to play." text.
-    pressKeySurf, pressKeyRect = makeTextObjs(text2, BASICFONT, TEXTCOLOR)
+    pressKeySurf, pressKeyRect = crearObjetosTexto(text2, BASICFONT, COLOR_TEXTO)
     pressKeyRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + 100)
     DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
 
@@ -426,12 +415,12 @@ def cargar_imagen(filename, transformar=True, transparent=False):
             image.set_colorkey(color, RLEACCEL)
     return image
 
-def displayImage(rutaImagen):
+def mostrarImagen(rutaImagen):
     image = pygame.transform.scale(pygame.image.load(rutaImagen), (WINDOWWIDTH, WINDOWHEIGHT))
     DISPLAYSURF.blit(image, (0, 0))
     pygame.display.update()
 
-def setupDisplay():
+def configurarPantalla():
     disp_no = os.getenv("DISPLAY")
 
     # Check which frame buffer drivers are available
