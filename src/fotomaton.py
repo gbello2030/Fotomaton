@@ -119,7 +119,7 @@ def main():
     FPSCLOCK = pygame.time.Clock()
     pygame.mouse.set_visible(True)  # hide the mouse cursor
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
-# #    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
+##    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
     BIGFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * big_font_size))
     HUGEFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * huge_font_size))
@@ -153,6 +153,10 @@ def main():
                 elif event.key == K_SPACE:
                     pygame.event.clear()
                     sacarFotosMultiple(4)
+                    pygame.event.clear()
+                elif event.key == K_p:
+                    pygame.event.clear()
+                    sacarFotoPolaroid()
                     pygame.event.clear()
                 elif event.key == K_e:
                     pygame.event.clear()
@@ -219,13 +223,61 @@ def sacarFotosMultiple(numPhotos):
     mostarTextoEnPantalla('Fotomaton', 'Procesando...')
 
     crearComposicionCuadricula(imageArray)
-    # procesarFotos(imageArray)
     
     CAMERA.resolution = preview_resolution
     CAMERA.preview_fullscreen = False
     CAMERA.start_preview()
     CAMERA.awb_mode = 'auto'
     CAMERA.exposure_mode = 'auto'
+
+
+########################################################################################
+########################################################################################
+
+def sacarFotoPolaroid():
+    DISPLAYSURF.fill(NEGRO)
+    CAMERA.preview_fullscreen = True
+##    CAMERA.preview_fullscreen = False
+    CAMERA.preview_alpha = preview_alpha
+    readySurf, readyRect = crearObjetosTexto('Preparados...', BIGFONT, BLANCO)
+    readyRect.midbottom = (WINDOWWIDTH / 2, WINDOWHEIGHT / 10 * 9)
+    DISPLAYSURF.blit(readySurf, readyRect)
+    pygame.display.update()
+    time.sleep(1.4)
+    
+
+    # Cuenta atrás para sacar la foto, muestra los numeros en grande en la pantalla.
+    for i in range (5, 0, -1):
+        DISPLAYSURF.fill(NEGRO)
+        numSurf, numRect = crearObjetosTexto(str(i), HUGEFONT, BLANCO)
+        numRect.center = (WINDOWWIDTH / 2, WINDOWHEIGHT / 2 - GRID_H_PX)
+        DISPLAYSURF.blit(numSurf, numRect)
+        pygame.display.update()
+        time.sleep(0.8)  # cada numero se muestra este tiempo
+        
+    # Se limpia la pantalla.
+    DISPLAYSURF.fill(NEGRO)
+    takephotoSurf, takephotoRect = crearObjetosTexto('Capturando foto... ', BIGFONT, BLANCO)
+    takephotoRect.midbottom = (WINDOWWIDTH / 2, WINDOWHEIGHT / 10 * 9)
+    DISPLAYSURF.blit(takephotoSurf, takephotoRect)
+    pygame.display.update()
+    foto = capturarFoto()  # Se captura la foto
+        
+    DISPLAYSURF.fill(NEGRO)  # Se limpia la pantalla.
+    pygame.display.update()
+    CAMERA.stop_preview()
+    mostarTextoEnPantalla('Fotomaton', 'Procesando...')
+
+    crearComposicionPolaroid(foto)
+    
+    CAMERA.resolution = preview_resolution
+    CAMERA.preview_fullscreen = False
+    CAMERA.start_preview()
+    CAMERA.awb_mode = 'auto'
+    CAMERA.exposure_mode = 'auto'
+
+########################################################################################
+########################################################################################
     
 def crearComposicionCuadricula(imageArray):
     marco = Image.open(marcosPath + "/marco_motos.jpg")
@@ -329,7 +381,7 @@ def pantallaPrincipal():
 def galeriaImagenesLateral():
     global thumb_index, thumb_last_sw
 
-    if len(os.listdir(rawPath)) > thumb_files_number:
+    if len(os.listdir(thumbPath)) > thumb_files_number:
         cargarImagenesGaleria()
 
     if time.time() - thumb_time > thumb_last_sw:
@@ -349,11 +401,11 @@ def cargarImagenesGaleria():
     global thumb_files_number
 
     thumb_size = (int(thumb_photo_width * GRID_W_PX), int(thumb_photo_height * GRID_H_PX))
-    for dirName, subdirList, fileList in os.walk(rawPath):
+    for dirName, subdirList, fileList in os.walk(thumbPath):
         thumb_files_number = len(fileList)
         for fname in fileList:
             try:
-               thumb_strip.append(pygame.transform.smoothscale(pygame.image.load(rawPath + fname).convert(), thumb_size))
+               thumb_strip.append(pygame.transform.smoothscale(pygame.image.load(thumbPath + fname).convert(), thumb_size))
             except:
                 thumb_strip.append(pygame.Surface(thumb_size))
                 thumb_strip[0].fill(blank_thumb)
