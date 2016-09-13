@@ -75,33 +75,57 @@ thumb_strip = []
 thumb_files_number = 0
 
 # GPIO 
+
+GPIO.cleanup()
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-io_start_bttn = 26
-io_start_light = 21
-io_enter_bttn = 16
-io_enter_light = 19
-io_up_bttn = 20
-io_up_light = 5
-io_dn_bttn = 12
-io_dn_light = 6
-io_cameara_led = 18
 
-# setup GPIO
-GPIO.setup(io_start_bttn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(io_enter_bttn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(io_up_bttn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(io_dn_bttn, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(io_start_light, GPIO.OUT)
-GPIO.output(io_start_light, False)
-GPIO.setup(io_enter_light, GPIO.OUT)
-GPIO.output(io_enter_light, True)
-GPIO.setup(io_up_light, GPIO.OUT)
-GPIO.output(io_up_light, True)
-GPIO.setup(io_dn_light, GPIO.OUT)
-GPIO.output(io_dn_light, True)
-GPIO.setup(io_cameara_led, GPIO.OUT)
-GPIO.output(io_cameara_led, True)
+#BOTONES IN
+botonAmarillo = 4
+botonRojo = 17
+botonVerde = 27
+botonAzul = 22
+
+#Luz botones OUT
+luzBtnAmarillo = 18
+luzBtnRojo = 23
+luzBtnVerde = 24
+luzBtnAzul = 25
+
+#LuzFlash OUT
+luzFlash = 12
+
+#variable para saber si la luz está encendida
+luzEncendida = False
+
+
+# setup GPIO IN
+GPIO.setup(botonAmarillo, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(botonRojo, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(botonVerde, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(botonAzul, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# setup GPIO OUT
+GPIO.setup(luzBtnAmarillo, GPIO.OUT)
+GPIO.output(luzBtnAmarillo, False)
+
+GPIO.setup(luzBtnRojo, GPIO.OUT)
+GPIO.output(luzBtnRojo, False)
+
+GPIO.setup(luzBtnVerde, GPIO.OUT)
+GPIO.output(luzBtnVerde, False)
+
+GPIO.setup(luzBtnAzul, GPIO.OUT)
+GPIO.output(luzBtnAzul, False)
+
+GPIO.setup(luzFlash, GPIO.OUT)
+GPIO.output(luzFlash, False)
+
+
+########################################################################################
+########################################################################################
+
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT, HUGEFONT, WINDOWWIDTH, WINDOWHEIGHT, CAMERA, GRID_W_PX, GRID_H_PX
@@ -117,7 +141,9 @@ def main():
     
     GRID_H_PX = int(WINDOWHEIGHT / grid_height)
     FPSCLOCK = pygame.time.Clock()
+    
     pygame.mouse.set_visible(True)  # hide the mouse cursor
+    
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.FULLSCREEN, 32)
 ##    DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), pygame.RESIZABLE, 32)
     BASICFONT = pygame.font.Font('freesansbold.ttf', int(GRID_H_PX * basic_font_size))
@@ -131,59 +157,91 @@ def main():
 
     #Carga de los thumbnails de las imagenes que se han ido sacando
     cargarImagenesGaleria()
-    GPIO.add_event_detect(io_start_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
-    GPIO.add_event_detect(io_enter_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
-    GPIO.add_event_detect(io_up_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
-    GPIO.add_event_detect(io_dn_bttn, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(botonAmarillo, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(botonRojo, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(botonVerde, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
+    GPIO.add_event_detect(botonAzul, GPIO.FALLING, callback=eventosBoton, bouncetime=1000)
     pygame.event.clear()
     
     while True:
         checkForQuit()
-        GPIO.output(io_start_light, False)
-        GPIO.output(io_enter_light, False)
-        GPIO.output(io_up_light, False)
-        GPIO.output(io_dn_light, False)
-        GPIO.output(io_cameara_led, False)
+        
+        #se configura el estado de las luces de los botones
+        GPIO.output(luzBtnAmarillo, True)
+        GPIO.output(luzBtnRojo, True)
+        GPIO.output(luzBtnVerde, True)
+        GPIO.output(luzBtnAzul, False)
+        
         for event in pygame.event.get():
             if event.type == KEYDOWN:
-                GPIO.output(io_start_light, False)
+                GPIO.output(luzFlash, False)
                 if event.key == K_ESCAPE:
                     pygame.event.clear()
                     terminate()  # terminate if the KEYUP event was for the Esc key
-                elif event.key == K_SPACE:
+                elif event.key == K_c:  #Leido el evento para crear una composicion de imagenes
                     pygame.event.clear()
                     sacarFotosMultiple(4)
                     pygame.event.clear()
-                elif event.key == K_p:
+                elif event.key == K_p:  #Leido el evento para crear una foto polaroid
+                    pygame.event.clear()
+                    sacarFotoPolaroid()
+                    pygame.event.clear()
+                elif event.key == K_l:  #Leido el evento para encendere las luces
+                    pygame.event.clear()
+                    #Se comprueba el estado de la luz para hacer la inversa
+                    if luzEncendida:
+                        GPIO.output(luzFlash, False)
+                        luzEncendida = False
+                    else:
+                        GPIO.output(luzFlash, True)
+                        luzEncendida = True
+                        
+                    pygame.event.clear()
+                elif event.key == K_t: #Leido el evento para compartir la imagen en twitter
                     pygame.event.clear()
                     sacarFotoPolaroid()
                     pygame.event.clear()
                 elif event.key == K_e:
                     pygame.event.clear()
                     terminate()
-        GPIO.output(io_start_light, True)
+        
         pantallaPrincipal()
     terminate()
-    
+
+
+
+########################################################################################
+########################################################################################
+
+
 # Turn GPIO (button) events into pygame key down events
 def eventosBoton(channel):
     # time.sleep(0.001)
     if GPIO.input(channel) == 1 :
-        if channel == io_start_bttn:
-            event = pygame.event.Event(KEYDOWN, key=K_SPACE)
-        elif channel == io_enter_bttn:
-            event = pygame.event.Event(KEYDOWN, key=K_RETURN)
-        elif channel == io_up_bttn:
-            event = pygame.event.Event(KEYDOWN, key=K_UP)
-        elif channel == io_dn_bttn:
-            event = pygame.event.Event(KEYDOWN, key=K_DOWN)
+        if channel == botonRojo:
+            event = pygame.event.Event(KEYDOWN, key=K_c)
+        elif channel == botonVerde:
+            event = pygame.event.Event(KEYDOWN, key=K_p)
+        elif channel == luzBtnAmarillo:
+            event = pygame.event.Event(KEYDOWN, key=K_l)
+        elif channel == luzBtnAzul:
+            event = pygame.event.Event(KEYDOWN, key=K_t)
         else:
             event = pygame.event.Event(NOEVENT)
     else:
         event = pygame.event.Event(NOEVENT)
     pygame.event.post(event)
-    
+
+
+########################################################################################
+########################################################################################
+
+
 def sacarFotosMultiple(numPhotos):
+    #Apagamos la luz de los botones
+    GPIO.output(luzBtnAmarillo, False)
+    GPIO.output(luzBtnRojo, False)
+    GPIO.output(luzBtnVerde, False)
     imageArray = []
     DISPLAYSURF.fill(NEGRO)
     CAMERA.preview_fullscreen = True
@@ -235,6 +293,12 @@ def sacarFotosMultiple(numPhotos):
 ########################################################################################
 
 def sacarFotoPolaroid():
+    
+    #Apagamos la luz de los botones
+    GPIO.output(luzBtnAmarillo, False)
+    GPIO.output(luzBtnRojo, False)
+    GPIO.output(luzBtnVerde, False)
+    
     DISPLAYSURF.fill(NEGRO)
     CAMERA.preview_fullscreen = True
 ##    CAMERA.preview_fullscreen = False
@@ -313,6 +377,11 @@ def crearComposicionCuadricula(imageArray):
     mostrarImagen(composicionesPath + '/' + nombreComposicion + ".jpg")
     time.sleep(tiempoPrevisualizarComposicion) #Se muestra la imagen creada durante el numero de segundos indicado
 
+
+########################################################################################
+########################################################################################
+
+
 def crearComposicionPolaroid(imagen):
     marco = Image.open(marcosPath +"/marco_motos_polaroid.jpg")
     
@@ -331,21 +400,32 @@ def crearComposicionPolaroid(imagen):
     
     mostrarImagen(composicionesPolaroidPath + '/' + nombreComposicion + ".jpg")
     time.sleep(tiempoPrevisualizarComposicion) #Se muestra la imagen creada durante el numero de segundos indicado
-    
-    
+
+
+########################################################################################
+########################################################################################
+
+
 def guardarImagenThumb(imagen, nombreThumb):
     resized = imagen.resize(thumb_size, Image.ANTIALIAS)
     resized.save(thumbPath + nombreThumb + '.jpg', 'JPEG', quality=100)
     
 
+########################################################################################
+########################################################################################
+
+
 def capturarFoto():
     stream = io.BytesIO()  # IO stream para guardar la imagen
-    GPIO.output(io_cameara_led, True)
     CAMERA.capture(stream, 'jpeg', False, None, None, quality=100)  # Se saca la foto
-    GPIO.output(io_cameara_led, False)
     stream.seek(0)  # Se posiciona en el primer byte del IO Stream de la imagen
     foto = Image.open(stream)  # Se crea un objeto de imagen PIL para procesarse luego
     return foto
+
+
+########################################################################################
+########################################################################################
+
 
 def pantallaPrincipal():
     global thumb_last_sw
@@ -378,6 +458,11 @@ def pantallaPrincipal():
         pygame.display.update(galeriaImagenesLateral())
         FPSCLOCK.tick(FPS)
 
+
+########################################################################################
+########################################################################################
+
+
 def galeriaImagenesLateral():
     global thumb_index, thumb_last_sw
 
@@ -394,6 +479,11 @@ def galeriaImagenesLateral():
             strip.blit(thumb_strip[i], (thumb_strip_pad * GRID_W_PX, ((thumb_index + i) % thumb_files_number) * thumb_h_pos))
         return DISPLAYSURF.blit(strip, (GRID_W_PX * thumb_strip_x, GRID_H_PX * thumb_strip_y))
         
+
+########################################################################################
+########################################################################################
+
+
 def cargarImagenesGaleria():
     global thumb_strip
     del thumb_strip[:]  # ELIMINA EL CONTENIDO DEL ARRAY DE IMAGENES LATERALES
@@ -411,17 +501,30 @@ def cargarImagenesGaleria():
                 thumb_strip[0].fill(blank_thumb)
 
 
+########################################################################################
+########################################################################################
+
+
 def crearObjetosTexto(text, font, color):
     surf = font.render(text, True, color)
     return surf, surf.get_rect()
+
+
+########################################################################################
+########################################################################################
+
 
 def terminate():
     CAMERA.stop_preview()
     CAMERA.close()
     mostarTextoEnPantalla('Cerrando', '')
-    pygame.quit()
+    pygame.quit()   
 
-    
+
+########################################################################################
+########################################################################################
+
+
 def checkForQuit():
     for event in pygame.event.get(QUIT):  # obtiene todos los eventos de tipo QUIT
         terminate()  # llama al terminate si algun evento de tipo QUIT se ha invocado
@@ -429,6 +532,11 @@ def checkForQuit():
         if event.key == K_ESCAPE:
             terminate()  # llama al terminate spulsado la tecla Esc
         pygame.event.post(event)  # Se ponen de nuevo los eventos de tipo KEYUP
+
+
+########################################################################################
+########################################################################################
+
 
 def mostarTextoEnPantalla(text, text2):
     # This function displays large text in the
@@ -452,6 +560,10 @@ def mostarTextoEnPantalla(text, text2):
     pygame.display.update()
 
 
+########################################################################################
+########################################################################################
+
+
 def cargar_imagen(filename, transformar=True, transparent=False):
     try: 
         if transformar:
@@ -467,10 +579,20 @@ def cargar_imagen(filename, transformar=True, transparent=False):
             image.set_colorkey(color, RLEACCEL)
     return image
 
+
+########################################################################################
+########################################################################################
+
+
 def mostrarImagen(rutaImagen):
     image = pygame.transform.scale(pygame.image.load(rutaImagen), (WINDOWWIDTH, WINDOWHEIGHT))
     DISPLAYSURF.blit(image, (0, 0))
     pygame.display.update()
+
+
+########################################################################################
+########################################################################################
+
 
 def configurarPantalla():
     disp_no = os.getenv("DISPLAY")
@@ -486,13 +608,18 @@ def configurarPantalla():
         try:
             pygame.display.init()
         except pygame.error:
-# #            print 'Driver: {0} failed.'.format(driver)
+##            print 'Driver: {0} failed.'.format(driver)
             continue
         found = True
         break
 
     if not found:
         raise Exception('No suitable video driver found!')
+
+
+
+########################################################################################
+########################################################################################
 
 if __name__ == '__main__':
     main()
